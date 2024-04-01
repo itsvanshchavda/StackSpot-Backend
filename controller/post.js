@@ -1,5 +1,7 @@
 import { Post } from "../models/Post.js";
 import { Comment } from "../models/Comment.js";
+import { User } from "../models/User.js";
+import mongoose from "mongoose";
 
 export const writePost = async (req, res) => {
   try {
@@ -71,7 +73,7 @@ export const deletePost = async (req, res) => {
 
     await Post.findByIdAndDelete(id);
 
-    await Comment.deleteMany({ postId: id }); // delete all comments related to the post
+    await Comment.deleteMany({ postId: id });
 
     res.status(200).json({
       success: true,
@@ -86,11 +88,15 @@ export const deletePost = async (req, res) => {
 
 export const getPost = async (req, res) => {
   try {
-    const getPost = await Post.findById(req.params.id);
+    const postId = req.params.id;
+    const getPost = await Post.findById(postId).populate(
+      "likes bookmarks"
+    );
 
     res.status(200).json({
       success: true,
       getPost,
+      likeCount: getPost.likeCount || 0,
     });
   } catch (err) {
     res.status(500).json({
@@ -101,7 +107,7 @@ export const getPost = async (req, res) => {
 
 export const getAllPost = async (req, res) => {
   try {
-    const allPost = await Post.find();
+    const allPost = await Post.find().populate("likes bookmarks")
 
     if (!allPost || allPost.length === 0) {
       return res.status(404).json({ message: "No post found" });
@@ -110,6 +116,124 @@ export const getAllPost = async (req, res) => {
     res.status(200).json({
       success: true,
       allPost,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};
+
+// Post Like
+export const likePost = async (req, res) => {
+  try {
+    let user = await User.findById(req.userId);
+    const { id } = req.params;
+
+    if (!user) return res.status(400).json({ message: "User not found" });
+
+    // Verify the existence of the post
+    const existingPost = await Post.findById(id);
+    if (!existingPost) {
+      return res.status(400).json({
+        success: false,
+        message: "Post does not exist",
+      });
+    }
+
+    const likedPost = await Post.findByIdAndUpdate(
+      id,
+      {
+        $addToSet: { likes: user._id },
+      },
+      { new: true }
+    )
+
+    if (!likedPost) {
+      return res.status(400).json({
+        success: false,
+        message: "Failed to update likes",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Post Liked",
+      likedPost,
+    });
+  } catch (err) {
+    console.error(err); // Log any errors that occur
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const unlikePost = async (req, res) => {
+  try {
+    let user = await User.findById(req.userId);
+    const { id } = req.params;
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const unlike = await Post.findByIdAndUpdate(
+      id,
+      {
+        $pull: { likes: user._id },
+      },
+      { new: true }
+    )
+
+    if (unlike) {
+      return res.status(200).json({
+        message: "Post Unliked",
+        unlike,
+      });
+    }
+  } catch (err) {
+    console.error(err); // Log any errors that occur
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Post Bookmark
+export const bookmarkPost = async (req, res) => {
+  try {
+    const postId = req.params.id;
+    const userId = req.body.userId;
+
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res.status(400).json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+
+    if (post.bookmarks.includes(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "You have already bookmarked this post",
+      });
+    }
+
+    post.bookmarks.push(userId);
+    await post.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Post bookmarked",
+      post: post,
     });
   } catch (err) {
     res.status(500).json({
@@ -142,14 +266,19 @@ export const getSearchedPost = async (req, res) => {
 };
 
 export const userPost = async (req, res) => {
-  const { userId } = req.params;
-
   try {
-    const userpost = await Post.find({ userId });
+    const userpPost = await Post.find({ userId: req.params.userID });
+
+    if (!userpPost || userpPost.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User post not found",
+      });
+    }
 
     res.status(200).json({
       success: true,
-      userpost,
+      userPost: userpPost,
     });
   } catch (err) {
     res.status(500).json({

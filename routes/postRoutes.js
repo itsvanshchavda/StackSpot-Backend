@@ -4,6 +4,8 @@ import {
   getAllPost,
   getPost,
   getSearchedPost,
+  likePost,
+  unlikePost,
   updatePost,
   uploadImage,
   userPost,
@@ -23,12 +25,15 @@ router.post("/create", isAuthenticated, writePost);
 router.put("/:id", isAuthenticated, updatePost);
 router.delete("/:id", isAuthenticated, deletePost);
 
+router.put("/like/:id", isAuthenticated, likePost);
+router.put("/unlike/:id", isAuthenticated, unlikePost);
+
 //Image Upload
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     return cb(null, "./images");
-  }, 
+  },
 
   filename: (req, file, cb) => {
     const uniqueFilename = `${Date.now()}-${file.originalname}`;

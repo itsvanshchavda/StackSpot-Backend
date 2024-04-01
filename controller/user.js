@@ -18,22 +18,27 @@ export const updateUser = async (req, res) => {
       profilePhoto = filename;
     }
 
-    // Hash password
-    const hashPass = bcrypt.hashSync(password, 10);
+    // Check if password is provided
+    let updateFields = {
+      username: username,
+      firstname: firstname,
+      lastname: lastname,
+      email: email,
+      bio: bio,
+      profilePhoto: profilePhoto,
+    };
+
+    if (password) {
+      // Hash password
+      const hashPass = bcrypt.hashSync(password, 10);
+      updateFields.password = hashPass;
+    }
 
     // Update user
     const user = await User.findByIdAndUpdate(
       id,
       {
-        $set: {
-          username: username,
-          firstname: firstname,
-          lastname: lastname,
-          email: email,
-          bio: bio,
-          profilePhoto: profilePhoto,
-          password: hashPass,
-        },
+        $set: updateFields,
       },
       { new: true }
     );
@@ -53,6 +58,7 @@ export const updateUser = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
 
 //delete user
 export const deleteUser = async (req, res) => {
