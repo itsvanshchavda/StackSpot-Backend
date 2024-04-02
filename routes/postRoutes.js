@@ -1,10 +1,12 @@
 import { Router } from "express";
 import {
+  addBookmark,
   deletePost,
   getAllPost,
   getPost,
   getSearchedPost,
   likePost,
+  removeBookmark,
   unlikePost,
   updatePost,
   uploadImage,
@@ -27,6 +29,10 @@ router.delete("/:id", isAuthenticated, deletePost);
 
 router.put("/like/:id", isAuthenticated, likePost);
 router.put("/unlike/:id", isAuthenticated, unlikePost);
+
+router.put('/addbookmark/:id', isAuthenticated, addBookmark);
+router.put('/removebookmark/:id', isAuthenticated, removeBookmark);
+
 
 //Image Upload
 

@@ -206,38 +206,92 @@ export const unlikePost = async (req, res) => {
 };
 
 // Post Bookmark
-export const bookmarkPost = async (req, res) => {
+export const addBookmark = async (req, res) => {
   try {
-    const postId = req.params.id;
-    const userId = req.body.userId;
+    let user = await User.findById(req.userId);
+    const { id } = req.params;
 
-    const post = await Post.findById(postId);
+    if (!user) return res.status(400).json({ message: "User not found" });
 
-    if (!post) {
+    // Verify the existence of the post
+    const existingPost = await Post.findById(id);
+    if (!existingPost) {
       return res.status(400).json({
         success: false,
-        message: "Post not found",
+        message: "Post does not exist",
       });
     }
 
-    if (post.bookmarks.includes(userId)) {
+    const bookmark = await Post.findByIdAndUpdate(
+      id,
+      {
+        $addToSet: { bookmarks: user._id },
+      },
+      { new: true }
+    ).populate("bookmarks")
+
+    if (!bookmark) {
       return res.status(400).json({
         success: false,
-        message: "You have already bookmarked this post",
+        message: "Failed to add bookmark",
       });
     }
-
-    post.bookmarks.push(userId);
-    await post.save();
 
     res.status(200).json({
       success: true,
-      message: "Post bookmarked",
-      post: post,
+      message: "Post Bookmarked",
+      bookmark,
     });
   } catch (err) {
-    res.status(500).json({
-      message: err.message,
+    console.error(err); // Log any errors that occur
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const removeBookmark = async (req, res) => {
+  try {
+    let user = await User.findById(req.userId);
+    const { id } = req.params;
+
+    if (!user) return res.status(400).json({ message: "User not found" });
+
+    // Verify the existence of the post
+    const post = await Post.findById(id);
+    if (!post) {
+      return res.status(400).json({
+        success: false,
+        message: "Post does not exist",
+      });
+    }
+
+    const bookmark = await Post.findByIdAndUpdate(
+      id,
+      {
+        $pull: { bookmarks: user._id },
+      },
+      { new: true }
+    ).populate('bookmarks')
+
+    if (!bookmark) {
+      return res.status(400).json({
+        success: false,
+        message: "Failed to add bookmark",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Bookmark removed",
+      bookmark,
+    });
+  } catch (err) {
+    console.error(err); // Log any errors that occur
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
     });
   }
 };
