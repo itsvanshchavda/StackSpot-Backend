@@ -1,11 +1,31 @@
 import { Post } from "../models/Post.js";
 import { Comment } from "../models/Comment.js";
 import { User } from "../models/User.js";
-import mongoose from "mongoose";
+
+import getDataUri from "../utils/dataUri.js";
+import { v2 as cloudinary } from "cloudinary";
 
 export const writePost = async (req, res) => {
   try {
-    const newPost = await Post.create(req.body);
+    const { title, description, username, userId, firstname, lastname } =
+      req.body;
+
+    const newPost = Post.create(
+      title,
+      description,
+      username,
+      userId,
+      firstname,
+      lastname
+    );
+
+    if (!newPost) {
+      return res.status(400).json({
+        success: false,
+        message: "Failed to create post",
+      });
+    }
+
     res.status(200).json({
       success: true,
       message: "Post created",
@@ -15,39 +35,54 @@ export const writePost = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
-
 export const updatePost = async (req, res) => {
   try {
-    const { id } = req.params;
+    let { id } = req.params;
 
-    if (!id) {
-      return res.status(400).json({
-        success: false,
-        message: "Id is required",
-      });
+    let post = await Post.findById(id);
+    const { password } = req.body;
+    if (!post) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
-    const updatePost = await Post.findByIdAndUpdate(
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      const hashPass = bcrypt.hashSync(password, salt);
+      password = hashPass;
+    }
+
+    let updateFieds = { ...req.body };
+
+    if (req.file) {
+      const file = req.file;
+      const filUri = getDataUri(file);
+      const result = await cloudinary.uploader.upload(filUri.content, {
+        folder: "posts",
+        resource_type: "auto",
+        use_filename: true,
+        public_id: file.originalname.split(".")[0],
+      });
+
+      updateFieds.photo = {
+        public_id: result.public_id,
+        url: result.secure_url,
+      };
+    }
+
+    const updatedPost = await Post.findByIdAndUpdate(
       id,
-      { $set: req.body },
+      { $set: updateFieds },
       { new: true }
     );
-    if (!updatePost) {
-      return res.status(404).json({
-        success: false,
-        message: "Post not found",
-      });
-    }
 
     res.status(200).json({
       success: true,
-      updatePost,
+      updatedPost,
     });
   } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+    return res.status(500).json({ message: err.message });
   }
 };
 
@@ -89,9 +124,7 @@ export const deletePost = async (req, res) => {
 export const getPost = async (req, res) => {
   try {
     const postId = req.params.id;
-    const getPost = await Post.findById(postId).populate(
-      "likes bookmarks"
-    );
+    const getPost = await Post.findById(postId).populate("likes bookmarks");
 
     res.status(200).json({
       success: true,
@@ -107,7 +140,7 @@ export const getPost = async (req, res) => {
 
 export const getAllPost = async (req, res) => {
   try {
-    const allPost = await Post.find().populate("likes bookmarks")
+    const allPost = await Post.find().populate("likes bookmarks");
 
     if (!allPost || allPost.length === 0) {
       return res.status(404).json({ message: "No post found" });
@@ -147,7 +180,7 @@ export const likePost = async (req, res) => {
         $addToSet: { likes: user._id },
       },
       { new: true }
-    )
+    );
 
     if (!likedPost) {
       return res.status(400).json({
@@ -188,7 +221,7 @@ export const unlikePost = async (req, res) => {
         $pull: { likes: user._id },
       },
       { new: true }
-    )
+    );
 
     if (unlike) {
       return res.status(200).json({
@@ -228,7 +261,7 @@ export const addBookmark = async (req, res) => {
         $addToSet: { bookmarks: user._id },
       },
       { new: true }
-    ).populate("bookmarks")
+    ).populate("bookmarks");
 
     if (!bookmark) {
       return res.status(400).json({
@@ -273,7 +306,7 @@ export const removeBookmark = async (req, res) => {
         $pull: { bookmarks: user._id },
       },
       { new: true }
-    ).populate('bookmarks')
+    ).populate("bookmarks");
 
     if (!bookmark) {
       return res.status(400).json({
@@ -346,10 +379,19 @@ export const uploadImage = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: "Please upload a file" });
     }
+
+    const file = req.file;
+    const fileUri = getDataUri(file);
+    const result = await cloudinary.uploader.upload(fileUri.content, {
+      folder: "posts",
+      public_id: file.originalname.split(".")[0],
+    });
+
     res.status(200).json({
       success: true,
       message: "Image uploaded",
-      img: req.file,
+      public_id: result.public_id,
+      secure_url: result.secure_url,
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });

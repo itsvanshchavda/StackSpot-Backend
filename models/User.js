@@ -17,7 +17,7 @@ const userShema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    
+
     bio: {
       type: String,
     },
@@ -34,9 +34,11 @@ const userShema = new mongoose.Schema(
     },
 
     profilePhoto: {
-      type: String,
+      public_id: String,
+      url: String,
     },
   },
+
   { timestamps: true }
 );
 

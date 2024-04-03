@@ -7,7 +7,8 @@ import userRoutes from "./routes/userRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import path from "path";
+
+
 
 export const app = express();
 
@@ -16,7 +17,7 @@ app.use(urlencoded({ extended: true }));
 // CORS
 const corsOptions = {
   origin: ["http://localhost:5173"],
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE" , "PATCH"],
   optionsSuccessStatus: 200,
   credentials: true,
 };
@@ -27,11 +28,11 @@ config({
   path: ".env",
 });
 
-const __dirname = path.resolve();
 
-app.use("/images", express.static(path.join(__dirname, "images")));
 
 connectDB();
+
+
 
 app.use("/api/auth", auth);
 app.use("/api/user", userRoutes);

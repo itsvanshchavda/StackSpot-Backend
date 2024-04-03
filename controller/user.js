@@ -2,63 +2,60 @@ import bcrypt from "bcrypt";
 import { User } from "../models/User.js";
 import { Post } from "../models/Post.js";
 import { Comment } from "../models/Comment.js";
+import { v2 as cloudinary } from "cloudinary";
+import getDataUri from "../utils/dataUri.js";
 
-//Update User
-
+// Update User
 export const updateUser = async (req, res) => {
-  const { id } = req.params;
-  const { password, firstname, lastname, email, bio, username } = req.body;
-
   try {
-    let profilePhoto = req.body.profilePhoto; // Initialize profilePhoto
+    let { id } = req.params;
 
-    // Handle file upload
-    if (req.file) {
-      const filename = req.file.path.split("\\").pop();
-      profilePhoto = filename;
-    }
-
-    // Check if password is provided
-    let updateFields = {
-      username: username,
-      firstname: firstname,
-      lastname: lastname,
-      email: email,
-      bio: bio,
-      profilePhoto: profilePhoto,
-    };
-
-    if (password) {
-      // Hash password
-      const hashPass = bcrypt.hashSync(password, 10);
-      updateFields.password = hashPass;
-    }
-
-    // Update user
-    const user = await User.findByIdAndUpdate(
-      id,
-      {
-        $set: updateFields,
-      },
-      { new: true }
-    );
-
-    // Check if user was updated successfully
-    if (!user) {
+    let authUser = await User.findById(id);
+    const { password } = req.body;
+    if (!authUser) {
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
     }
 
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      const hashPass = bcrypt.hashSync(password, salt);
+      password = hashPass;
+    }
+
+    let updateFieds = { ...req.body };
+
+    if (req.file) {
+      const file = req.file;
+      const filUri = getDataUri(file);
+      const result = await cloudinary.uploader.upload(filUri.content, {
+        folder: "profile",
+        resource_type: "auto",
+        use_filename: true,
+        public_id: file.originalname.split(".")[0],
+      });
+
+      updateFieds.profilePhoto = {
+        public_id: result.public_id,
+        url: result.secure_url,
+      };
+    }
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { $set: updateFieds },
+      { new: true }
+    );
+
     res.status(200).json({
       success: true,
-      user: user,
+      user,
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
 };
-
 
 //delete user
 export const deleteUser = async (req, res) => {
@@ -98,11 +95,27 @@ export const getUser = async (req, res) => {
   }
 };
 
-export const uploadProfilePhoto = (req, res) => {
-  if (req.file) {
-    res.status(200).json({
-      success: true,
-      profilePhoto: req.file.filename,
-    });
+export const uploadProfilePhoto = async (req, res) => {
+  try {
+    if (req.file) {
+      const file = req.file;
+      const filUri = getDataUri(file);
+      const result = await cloudinary.uploader.upload(filUri.content, {
+        folder: "profile",
+        resource_type: "auto",
+        use_filename: true,
+        public_id: file.originalname.split(".")[0],
+      });
+
+      return res.json({
+        success: true,
+        profilePhoto: {
+          public_id: result.public_id,
+          url: result.secure_url,
+        },
+      });
+    }
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
   }
 };
