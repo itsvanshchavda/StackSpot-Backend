@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 
-const userShema = new mongoose.Schema(
+const { Schema } = mongoose;
+
+const userSchema = new Schema(
   {
     username: {
       type: String,
@@ -37,9 +39,12 @@ const userShema = new mongoose.Schema(
       public_id: String,
       url: String,
     },
+
+    following: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
   },
 
   { timestamps: true }
 );
 
-export const User = mongoose.model("User", userShema);
+export const User = mongoose.model("User", userSchema);

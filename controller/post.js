@@ -7,17 +7,7 @@ import { v2 as cloudinary } from "cloudinary";
 
 export const writePost = async (req, res) => {
   try {
-    const { title, description, username, userId, firstname, lastname } =
-      req.body;
-
-    const newPost = Post.create(
-      title,
-      description,
-      username,
-      userId,
-      firstname,
-      lastname
-    );
+    const newPost = await Post.create(req.body);
 
     if (!newPost) {
       return res.status(400).json({
@@ -25,6 +15,7 @@ export const writePost = async (req, res) => {
         message: "Failed to create post",
       });
     }
+    
 
     res.status(200).json({
       success: true,
@@ -35,6 +26,7 @@ export const writePost = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
 export const updatePost = async (req, res) => {
   try {
     let { id } = req.params;

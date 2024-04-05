@@ -119,3 +119,45 @@ export const uploadProfilePhoto = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const allUsers = await User.find();
+
+    if (allUsers.length === 0) {
+      return res.status(404).json({ message: "No users found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      allUsers,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};
+
+export const getSearchedUser = async (req, res) => {
+  const { search } = req.query;
+
+  try {
+    const searchedUser = await User.find({
+      username: { $regex: search, $options: "i" },
+    });
+
+    if (!searchedUser || searchedUser.length === 0) {
+      return res.status(404).json({ message: "No user found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      searchedUser,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};
