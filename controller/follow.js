@@ -92,8 +92,15 @@ export const userFollowing = async (req, res) => {
 
 export const userFollowers = async (req, res) => {
   try {
-
     const { id } = req.params;
+
+    // Check if the id parameter is undefined or null
+    if (!id) {
+      return res.status(400).json({
+        message: "ID parameter is missing",
+      });
+    }
+
     const user = await User.findById(id).populate("followers");
 
     if (!user) {
@@ -118,31 +125,31 @@ export const userFollowers = async (req, res) => {
 export const userUnfollow = async (req, res, next) => {
   try {
     const { id } = req.params;
-    
+
     // Remove follower
     const user = await User.findByIdAndUpdate(id, {
       $pull: { followers: req.userId },
     });
-    
+
     if (!user) {
       return res.status(404).json({
         message: "User not found",
       });
     }
-    
+
     // Unfollow user
     const currentUser = await User.findByIdAndUpdate(
       req.userId,
       { $pull: { following: id } },
       { new: true }
     );
-    
+
     if (!currentUser) {
       return res.status(404).json({
         message: "User not found",
       });
     }
-    
+
     res.status(200).json({
       success: true,
       user: currentUser,
