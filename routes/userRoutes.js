@@ -1,6 +1,5 @@
 import { Router } from "express";
 import {
-  deleteUser,
   getAllUsers,
   getSearchedUser,
   getUser,
@@ -12,9 +11,9 @@ import upload from "../middleware/multer.js";
 
 const router = Router();
 
-router.get("/allUser", getAllUsers);
+
 router.get("/search", getSearchedUser);
-router.delete("/:id", isAuthenticated, deleteUser);
+router.get("/allUser", isAuthenticated ,getAllUsers);
 router.get("/:id", isAuthenticated, getUser);
 router.patch(
   "/:id",

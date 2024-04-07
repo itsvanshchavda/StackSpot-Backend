@@ -58,21 +58,6 @@ export const updateUser = async (req, res) => {
 };
 
 //delete user
-export const deleteUser = async (req, res) => {
-  let { id } = req.params;
-  try {
-    await User.findByIdAndDelete(id);
-    await Post.findByIdAndDelete(id);
-    await Comment.findByIdAndDelete(id);
-
-    res.status(200).json({
-      success: true,
-      message: "User has been deleted✅",
-    });
-  } catch (err) {
-    return res.status(500).json({ message: err.message });
-  }
-};
 
 //get user
 export const getUser = async (req, res) => {
@@ -122,7 +107,7 @@ export const uploadProfilePhoto = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const allUsers = await User.find();
+    const allUsers = await User.find({ _id: { $ne: req.userId } });
 
     if (allUsers.length === 0) {
       return res.status(404).json({ message: "No users found" });
@@ -144,7 +129,11 @@ export const getSearchedUser = async (req, res) => {
 
   try {
     const searchedUser = await User.find({
-      username: { $regex: search, $options: "i" },
+      $or: [
+        { firstname: { $regex: search, $options: "i" } },
+        { lastname: { $regex: search, $options: "i" } },
+        { username: { $regex: search, $options: "i" } }
+      ]
     });
 
     if (!searchedUser || searchedUser.length === 0) {
