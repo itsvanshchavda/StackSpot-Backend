@@ -12,6 +12,7 @@ export const updateUser = async (req, res) => {
 
     let authUser = await User.findById(id);
     let { password } = req.body;
+    let updateFields = { ...req.body };
 
     if (!authUser) {
       return res
@@ -19,13 +20,14 @@ export const updateUser = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    const saltround = await bcrypt.genSalt(10);
-    const hashPass = await bcrypt.hash(password, saltround);
-    password = hashPass;
+    if (!req.body.password) {
+      delete updateFields.password;
+    }
 
-
-    let updateFields = { ...req.body, ...(hashPass ? { password: hashPass } : {}) };
-
+    if (req.body.password) {
+      const hashPass = bcrypt.hash(password, 10);
+      updateFields.password = hashPass;
+    }
 
     if (req.file) {
       const file = req.file;
@@ -57,7 +59,6 @@ export const updateUser = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
-
 
 //delete user
 
@@ -134,8 +135,8 @@ export const getSearchedUser = async (req, res) => {
       $or: [
         { firstname: { $regex: search, $options: "i" } },
         { lastname: { $regex: search, $options: "i" } },
-        { username: { $regex: search, $options: "i" } }
-      ]
+        { username: { $regex: search, $options: "i" } },
+      ],
     });
 
     if (!searchedUser || searchedUser.length === 0) {
