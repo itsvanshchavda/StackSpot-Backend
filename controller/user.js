@@ -11,20 +11,21 @@ export const updateUser = async (req, res) => {
     let { id } = req.params;
 
     let authUser = await User.findById(id);
-    const { password } = req.body;
+    let { password } = req.body;
+
     if (!authUser) {
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
     }
 
-    if (password) {
-      const salt = await bcrypt.genSalt(10);
-      const hashPass = bcrypt.hashSync(password, salt);
-      password = hashPass;
-    }
+    const saltround = await bcrypt.genSalt(10);
+    const hashPass = await bcrypt.hash(password, saltround);
+    password = hashPass;
 
-    let updateFieds = { ...req.body };
+
+    let updateFields = { ...req.body, ...(hashPass ? { password: hashPass } : {}) };
+
 
     if (req.file) {
       const file = req.file;
@@ -36,7 +37,7 @@ export const updateUser = async (req, res) => {
         public_id: file.originalname.split(".")[0],
       });
 
-      updateFieds.profilePhoto = {
+      updateFields.profilePhoto = {
         public_id: result.public_id,
         url: result.secure_url,
       };
@@ -44,7 +45,7 @@ export const updateUser = async (req, res) => {
 
     const user = await User.findByIdAndUpdate(
       id,
-      { $set: updateFieds },
+      { $set: updateFields },
       { new: true }
     );
 
@@ -56,6 +57,7 @@ export const updateUser = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
 
 //delete user
 
