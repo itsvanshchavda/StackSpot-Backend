@@ -15,7 +15,6 @@ export const writePost = async (req, res) => {
         message: "Failed to create post",
       });
     }
-    
 
     res.status(200).json({
       success: true,
@@ -52,9 +51,11 @@ export const updatePost = async (req, res) => {
       const filUri = getDataUri(file);
       const result = await cloudinary.uploader.upload(filUri.content, {
         folder: "posts",
-        resource_type: "auto",
-        use_filename: true,
         public_id: file.originalname.split(".")[0],
+        width: 800,
+        height: 400,
+        crop: 'fill',
+        gravity: 'auto', 
       });
 
       updateFieds.photo = {
@@ -377,6 +378,10 @@ export const uploadImage = async (req, res) => {
     const result = await cloudinary.uploader.upload(fileUri.content, {
       folder: "posts",
       public_id: file.originalname.split(".")[0],
+      width: 800,
+      height: 400,
+      crop: 'fill',
+      gravity: 'auto', 
     });
 
     res.status(200).json({
@@ -387,5 +392,24 @@ export const uploadImage = async (req, res) => {
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });
+  }
+};
+
+export const getFollowingPost = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+
+    const post = await Post.find({
+      userId: {
+        $in: user.following,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      followingPost: post,
+    });
+  } catch (err) {
+    console.log(err);
   }
 };

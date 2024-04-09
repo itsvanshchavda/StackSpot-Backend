@@ -3,6 +3,7 @@ import {
   addBookmark,
   deletePost,
   getAllPost,
+  getFollowingPost,
   getPost,
   getSearchedPost,
   likePost,
@@ -20,6 +21,7 @@ import upload from "../middleware/multer.js";
 
 const router = Router();
 
+router.get('/followings' , isAuthenticated , getFollowingPost)
 router.get("/search", getSearchedPost);
 router.get("/:id", getPost);
 router.get("/", getAllPost);
