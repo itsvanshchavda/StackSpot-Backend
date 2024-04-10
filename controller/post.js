@@ -413,3 +413,48 @@ export const getFollowingPost = async (req, res) => {
     console.log(err);
   }
 };
+
+export const getAnalytics = async (req, res) => {
+  try {
+
+    const getUser = await User.findById(req.userId);
+
+    if (!getUser) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    const userPosts = await Post.find({ userId: req.userId });
+
+    if (!userPosts || userPosts.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: "No posts found for this user"
+      });
+    }
+
+    let likes = 0;
+    let bookmarks = 0;
+
+    userPosts.forEach(post => {
+      likes += post.likes.length;
+      bookmarks += post.bookmarks.length;
+    });
+
+    const analytics = {
+      totalLikes: likes,
+      totalBookmarks: bookmarks
+    };
+
+    res.status(200).json({
+      success: true,
+      analytics
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};
