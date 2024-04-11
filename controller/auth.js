@@ -5,20 +5,28 @@ import jwt from "jsonwebtoken";
 
 export const register = async (req, res) => {
   try {
-    const { username, email, password , firstname , lastname } = req.body;
+    const { username, email, password, firstname, lastname } = req.body;
 
     const existingUser = await User.findOne({ $or: [{ username }, { email }] });
 
+
     if (existingUser) {
-      return res.status(404).json({
-        success: false,
-        message: "User already exists!!",
-      });
+      if (existingUser.username === username) {
+        return res.status(400).json({
+          success: false,
+          message: "Username already exists",
+        });
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: "Email already exists",
+        });
+      }
     }
 
     const saltround = await bcrypt.genSalt(10);
     const hashPass = await bcrypt.hash(password, saltround);
-    let newUser = await User.create({ username, email, password: hashPass , firstname , lastname });
+    let newUser = await User.create({ username, email, password: hashPass, firstname, lastname });
 
     setCookie(req, res, newUser, "Register Successfully!!");
   } catch (err) {
@@ -30,7 +38,7 @@ export const login = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    
+
     if (!user) {
       return res.status(404).json({
         success: true,
@@ -56,7 +64,7 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
-  
+
     res.clearCookie("token", {
       expires: new Date(0),
       sameSite: process.env.NODE_ENV === "development" ? "lax" : "none",
@@ -68,7 +76,7 @@ export const logout = async (req, res) => {
       message: "Logout Successfully",
     });
   } catch (error) {
-   
+
     console.error("Logout failed:", error);
     res.status(500).json({
       success: false,

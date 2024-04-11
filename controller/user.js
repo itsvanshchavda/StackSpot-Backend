@@ -8,26 +8,28 @@ import getDataUri from "../utils/dataUri.js";
 // Update User
 export const updateUser = async (req, res) => {
   try {
-    let { id } = req.params;
+    const { id } = req.params;
+    const { password, username, firstname, lastname, email , bio } = req.body;
+    const updateFields = {};
 
-    let authUser = await User.findById(id);
-    let { password } = req.body;
-    let updateFields = { ...req.body };
 
+    const authUser = await User.findById(id);
     if (!authUser) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    if (!req.body.password) {
-      delete updateFields.password;
+
+    if (password) {
+      updateFields.password = await bcrypt.hash(password, 10);
     }
 
-    if (req.body.password) {
-      const hashPass = bcrypt.hash(password, 10);
-      updateFields.password = hashPass;
-    }
+
+    if (username) updateFields.username = username;
+    if (firstname) updateFields.firstname = firstname;
+    if (lastname) updateFields.lastname = lastname;
+    if (email) updateFields.email = email;
+    if (bio) updateFields.bio = bio
+
 
     if (req.file) {
       const file = req.file;
@@ -45,18 +47,13 @@ export const updateUser = async (req, res) => {
       };
     }
 
-    const user = await User.findByIdAndUpdate(
-      id,
-      { $set: updateFields },
-      { new: true }
-    );
 
-    res.status(200).json({
-      success: true,
-      user,
-    });
+    const user = await User.findByIdAndUpdate(id, { $set: updateFields }, { new: true });
+
+    res.status(200).json({ success: true, user });
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+    console.error(err);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
