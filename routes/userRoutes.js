@@ -16,7 +16,7 @@ router.get("/search", getSearchedUser);
 router.get("/allUser", isAuthenticated ,getAllUsers);
 router.get("/:id", isAuthenticated, getUser);
 router.patch(
-  "/:id",
+  "/update",
   isAuthenticated,
   upload.single("profilePhoto"),
   updateUser
