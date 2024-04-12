@@ -15,8 +15,8 @@ export const setCookie = async (
     // Set cookie options based on environment
     const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV !== "development", // Use secure cookies in production
-      sameSite: "strict", // Prevent CSRF attacks
+      sameSite: process.env.NODE_ENV === "Development" ? "lax" : "none",
+      secure: process.env.NODE_ENV === "Development" ? false : true,
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     };
 
@@ -31,7 +31,6 @@ export const setCookie = async (
       user: user,
     });
   } catch (error) {
-    // Handle error if setting cookie fails
     console.error("Error setting cookie:", error);
     res.status(500).json({
       success: false,
