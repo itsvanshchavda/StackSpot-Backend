@@ -132,7 +132,7 @@ Feel free to provide some suggestions and feedback on the project. If you liked 
 
 ## License
 
-MIT LICENSE[MIT](LICENSE)
+MIT LICENSE [LICENSE](LICENSE)
 
 ## Developed By
 
