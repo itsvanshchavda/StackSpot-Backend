@@ -12,18 +12,16 @@ export const setCookie = async (
       expiresIn: "30d",
     });
 
-    // Set cookie options based on environment
     const cookieOptions = {
       httpOnly: true,
       sameSite: process.env.NODE_ENV === "Development" ? "lax" : "none",
-      secure: process.env.NODE_ENV === "Development" ? false : true,
+      secure: process.env.NODE_ENV === "Production" && true,
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     };
 
-    // Set the cookie in the response
+   
     res.cookie("token", token, cookieOptions);
 
-    // Send response with success message, token, and user data
     res.status(status).json({
       success: true,
       message: message,
