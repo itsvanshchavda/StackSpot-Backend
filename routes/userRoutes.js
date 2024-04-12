@@ -4,7 +4,6 @@ import {
   getSearchedUser,
   getUser,
   updateUser,
-  uploadProfilePhoto,
 } from "../controller/user.js";
 import { isAuthenticated } from "../middleware/auth.js";
 import upload from "../middleware/multer.js";
@@ -21,5 +20,5 @@ router.patch(
   upload.single("profilePhoto"),
   updateUser
 );
-router.post("/upload", upload.single("profilePhoto"), uploadProfilePhoto);
+// router.post("/upload", upload.single("profilePhoto"), uploadProfilePhoto);
 export default router;

@@ -28,9 +28,8 @@ export const updateUser = async (req, res) => {
     if (email) updateFields.email = email;
     if (bio) updateFields.bio = bio;
 
-
-    if (req.file) {
-      const file = req.file;
+    const file = req.file;
+    if (file) {
       const filUri = getDataUri(file);
       const result = await cloudinary.uploader.upload(filUri.content, {
         folder: "profile",
@@ -39,7 +38,6 @@ export const updateUser = async (req, res) => {
         public_id: file.originalname.split(".")[0],
       });
 
-      // Update profile photo information
       updateFields.profilePhoto = {
         public_id: result.public_id,
         url: result.secure_url,
@@ -80,36 +78,36 @@ export const getUser = async (req, res) => {
   }
 };
 
-export const uploadProfilePhoto = async (req, res) => {
-  try {
+// export const uploadProfilePhoto = async (req, res) => {
+//   try {
 
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: "No file uploaded" });
-    }
+//     if (!req.file) {
+//       return res.status(400).json({ success: false, message: "No file uploaded" });
+//     }
 
-    const file = req.file;
-    const filUri = getDataUri(file);
-
-
-    const result = await cloudinary.uploader.upload(filUri.content, {
-      folder: "profile",
-      resource_type: "auto",
-      use_filename: true,
-      public_id: file.originalname.split(".")[0],
-    });
+//     const file = req.file;
+//     const filUri = getDataUri(file);
 
 
-    return res.json({
-      success: true,
-      public_id: result.public_id,
-      secure_url: result.secure_url,
-    });
-  } catch (err) {
+//     const result = await cloudinary.uploader.upload(filUri.content, {
+//       folder: "profile",
+//       resource_type: "auto",
+//       use_filename: true,
+//       public_id: file.originalname.split(".")[0],
+//     });
 
-    console.error("Error uploading profile photo:", err);
-    return res.status(500).json({ success: false, message: "Failed to upload profile photo" });
-  }
-};
+
+//     return res.json({
+//       success: true,
+//       public_id: result.public_id,
+//       secure_url: result.secure_url,
+//     });
+//   } catch (err) {
+
+//     console.error("Error uploading profile photo:", err);
+//     return res.status(500).json({ success: false, message: "Failed to upload profile photo" });
+//   }
+// };
 
 
 export const getAllUsers = async (req, res) => {
