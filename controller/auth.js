@@ -4,7 +4,7 @@ import { setCookie } from "../utils/jwt.js";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../utils/sendOtp.js";
 
-export const verifyOtp = async (req, res) => {
+export const sendOtp = async (req, res) => {
   try {
     const { email } = req.body;
 

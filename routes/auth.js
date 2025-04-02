@@ -5,7 +5,7 @@ import {
   refetch,
   register,
   resetPassword,
-  verifyOtp,
+  sendOtp,
 } from "../controller/auth.js";
 
 const router = Router();
@@ -14,7 +14,7 @@ router.post("/register", register);
 router.post("/login", login);
 router.get("/logout", logout);
 router.get("/refetch", refetch);
-router.post("/verify-otp", verifyOtp);
+router.post("/send-otp", sendOtp);
 router.post("/reset-password", resetPassword);
 
 export default router;
