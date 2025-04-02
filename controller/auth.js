@@ -45,10 +45,9 @@ export const resetPassword = async (req, res) => {
     if (!password || !email) {
       return res.status(400).json({ message: "Please provide all fields" });
     }
-
     const user = await User.findOne({
       email,
-    }).select("-password");
+    });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -71,10 +70,12 @@ export const resetPassword = async (req, res) => {
 
     await user.save();
 
+    const { password: _, ...userData } = user.toObject();
+
     res.status(200).json({
       success: true,
       message: "Password reset successfully",
-      user,
+      userData,
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });
