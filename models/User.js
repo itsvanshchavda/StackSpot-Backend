@@ -40,6 +40,14 @@ const userSchema = new Schema(
       url: String,
     },
 
+    otp: {
+      type: String,
+    },
+
+    otpExpire: {
+      type: Date,
+    },
+
     following: [{ type: Schema.Types.ObjectId, ref: "User" }],
     followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
   },
